@@ -1,0 +1,880 @@
+/* ==========================================================
+   Chairman Optics – customer site styles
+   ========================================================== */
+
+/* ---------- Colours and shared values ---------- */
+:root {
+    /* Colours taken from the Chairman Optics logo */
+    --blue: #0B5A97;
+    --blue-dark: #0A4B86;
+    --navy: #0C2B63;
+    --footer: #021235;
+    --cyan: #80C7D9;
+    --light-blue: #EAF4F9;
+    --pale-blue: #C3E3EC;
+    --text: #33415C;
+    --muted: #5B6B86;
+    --border: #CBD5E1;
+    --white: #FFFFFF;
+    --error: #B42318;
+    --error-bg: #FEF3F2;
+    --success: #067647;
+    --success-bg: #ECFDF3;
+    --radius: 12px;
+    --shadow: 0 10px 30px rgba(11, 42, 91, 0.10);
+}
+
+/* ---------- Basic reset ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--white);
+}
+
+h1, h2, h3 {
+    font-family: 'Outfit', Arial, sans-serif;
+    color: var(--navy);
+    line-height: 1.2;
+    margin: 0 0 12px;
+}
+
+p {
+    margin: 0 0 12px;
+}
+
+a {
+    color: var(--blue);
+}
+
+a:hover {
+    color: var(--navy);
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-primary {
+    background: var(--blue);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--blue-dark);
+    color: var(--white);
+}
+
+.btn-dark {
+    background: var(--navy);
+    color: var(--white);
+}
+
+.btn-dark:hover {
+    background: var(--footer);
+    color: var(--white);
+}
+
+.btn-light {
+    background: var(--white);
+    color: var(--blue);
+}
+
+.btn-light:hover {
+    background: var(--light-blue);
+    color: var(--navy);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 8px;
+}
+
+.btn:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+    outline: 3px solid var(--pale-blue);
+    outline-offset: 2px;
+}
+
+/* ---------- Site header ---------- */
+.site-header {
+    background: var(--white);
+    box-shadow: 0 2px 12px rgba(11, 42, 91, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 76px;
+    flex-wrap: wrap;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo-img {
+    width: auto;
+    height: 52px;
+}
+
+.main-nav {
+    display: flex;
+    gap: 26px;
+}
+
+.main-nav a {
+    color: var(--navy);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.main-nav a:hover {
+    color: var(--blue);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-link {
+    color: var(--navy);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.greeting {
+    font-size: 14px;
+    color: var(--muted);
+}
+
+/* Menu button only shows on small screens */
+.menu-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.menu-toggle span {
+    display: block;
+    height: 2px;
+    margin: 5px 0;
+    background: var(--navy);
+}
+
+/* ---------- Messages ---------- */
+.alert {
+    margin: 20px 0;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.alert-success {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid #ABEFC6;
+}
+
+.alert-error {
+    background: var(--error-bg);
+    color: var(--error);
+    border: 1px solid #FECDCA;
+}
+
+/* ---------- Page hero (photo banner at the top of a page) ---------- */
+.page-hero {
+    /* Dark blue layer over the photo keeps the white text readable */
+    background:
+        linear-gradient(rgba(12, 43, 99, 0.85), rgba(12, 43, 99, 0.85)),
+        url('../images/banners/auth-hero.jpg') center / cover no-repeat,
+        var(--navy);
+    color: var(--white);
+    text-align: center;
+    padding: 70px 20px 110px;
+}
+
+.page-hero-content {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.page-hero-logo {
+    width: auto;
+    height: 64px;
+    margin: 0 auto 20px;
+}
+
+.page-hero h1 {
+    color: var(--white);
+    font-size: 40px;
+}
+
+.page-hero p {
+    color: #DCEEF5;
+    font-size: 17px;
+}
+
+/* ---------- Login and register pages (own layout, no menu) ---------- */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--light-blue);
+}
+
+.back-link {
+    align-self: center;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 16px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.auth-alert {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 0 16px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 640px;
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* The login card is narrower, so its link and message line up with it */
+.auth-card-small {
+    max-width: 480px;
+}
+
+.auth-page:has(.auth-card-small) .back-link,
+.auth-page:has(.auth-card-small) .auth-alert {
+    max-width: 480px;
+}
+
+
+/* Logo banner across the top of the card */
+.auth-banner {
+    background: var(--white);
+    border-bottom: 4px solid var(--cyan);
+    text-align: center;
+    padding: 36px 24px 28px;
+}
+
+.auth-banner h1 {
+    color: var(--navy);
+    font-size: 30px;
+    margin: 0;
+}
+.auth-content {
+    padding: 36px 40px 40px;
+}
+
+.auth-intro {
+    color: var(--muted);
+    margin-bottom: 24px;
+}
+
+.auth-switch {
+    text-align: center;
+    margin: 20px 0 0;
+    color: var(--muted);
+}
+
+.auth-switch-top {
+    margin: 0 0 24px;
+}
+
+.auth-copyright {
+    margin: 24px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* ---------- Forms ---------- */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--navy);
+}
+
+.required {
+    color: var(--error);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--white);
+}
+
+input:focus,
+select:focus {
+    border-color: var(--blue);
+}
+
+input.is-invalid,
+select.is-invalid {
+    border-color: var(--error);
+}
+
+.field-hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 6px 0 0;
+}
+
+.field-error {
+    font-size: 14px;
+    color: var(--error);
+    margin: 6px 0 0;
+}
+
+/* Password box with a Show/Hide button inside it */
+.password-wrap {
+    position: relative;
+}
+
+.password-wrap input {
+    padding-right: 76px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    min-width: 60px;
+    min-height: 36px;
+    border: none;
+    border-radius: 6px;
+    background: var(--light-blue);
+    color: var(--blue);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+    background: var(--footer);
+    color: #C9D3E6;
+    padding: 56px 0 20px;
+    border-top: 4px solid var(--cyan);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+}
+
+.footer-logo {
+    width: auto;
+    height: 56px;
+    margin-bottom: 16px;
+}
+
+.footer-title {
+    color: var(--white);
+    font-size: 17px;
+}
+
+.footer-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 8px;
+}
+
+.footer-links a {
+    color: #C9D3E6;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: var(--white);
+}
+
+.footer-bottom {
+    border-top: 1px solid #1C3360;
+    margin-top: 40px;
+    padding-top: 20px;
+    font-size: 14px;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 900px) {
+    .menu-toggle {
+        display: block;
+    }
+
+    .main-nav {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 0;
+        order: 3;
+    }
+
+    .main-nav.open {
+        display: flex;
+    }
+
+    .main-nav a {
+        padding: 12px 0;
+        border-top: 1px solid var(--light-blue);
+    }
+
+    .header-actions {
+        order: 2;
+    }
+
+    .greeting {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .header-actions .btn {
+        display: none;
+    }
+
+    .page-hero h1 {
+        font-size: 30px;
+    }
+
+    .logo-img {
+        height: 42px;
+    }
+
+    .auth-content {
+        padding: 28px 20px;
+    }
+
+    .auth-banner h1 {
+        font-size: 26px;
+    }
+
+    .form-row,
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .footer-grid {
+        gap: 24px;
+    }
+}
+/* ---------- Logo banner on the login and register cards ---------- */
+.auth-banner {
+    background: var(--white);
+    border-bottom: 4px solid var(--cyan);
+    text-align: center;
+    padding: 36px 24px 28px;
+}
+
+.auth-banner-logo {
+    width: auto;
+    height: 70px;
+    margin: 0 auto 18px;
+}
+
+.auth-banner h1 {
+    color: var(--navy);
+    font-size: 30px;
+    margin: 0;
+}
+/* ---------- Google icons ---------- */
+.material-symbols-outlined {
+    font-size: 22px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ---------- Form fields in the logo's light blue ---------- */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select {
+    border: 1.5px solid var(--cyan);
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(128, 199, 217, 0.45);
+}
+
+input.is-invalid,
+select.is-invalid {
+    border-color: var(--error);
+    box-shadow: none;
+}
+
+/* Eye button inside the password box */
+.password-wrap input {
+    padding-right: 52px;
+}
+
+.toggle-password {
+    min-width: 44px;
+    min-height: 44px;
+    right: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--blue);
+}
+
+.toggle-password:hover {
+    background: var(--light-blue);
+}
+
+/* ==========================================================
+   Header: floating white bar with dropdown menus
+   ========================================================== */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--light-blue);
+    box-shadow: none;
+    padding: 14px 0;
+}
+
+.header-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: var(--white);
+    border-radius: 14px;
+    padding: 10px 20px;
+    box-shadow: 0 8px 30px rgba(11, 42, 91, 0.12);
+}
+
+.logo {
+    flex-shrink: 0;
+}
+
+.logo-img {
+    height: 48px;
+}
+
+.main-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 16px;
+}
+
+.nav-list {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Links and dropdown buttons in the menu look the same */
+.main-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.main-nav .nav-link:hover,
+.dropdown.open > .nav-link {
+    color: var(--blue);
+}
+
+.nav-link .material-symbols-outlined {
+    font-size: 20px;
+    transition: transform 0.2s;
+}
+
+/* The arrow turns over when its menu is open */
+.dropdown.open > .dropdown-toggle .material-symbols-outlined:last-child {
+    transform: rotate(180deg);
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 60;
+    min-width: 220px;
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    background: var(--white);
+    border-top: 3px solid var(--cyan);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
+
+/* The account menu opens towards the left so it stays on screen */
+.dropdown-menu-right {
+    left: auto;
+    right: 0;
+}
+
+.dropdown:hover > .dropdown-menu,
+.dropdown:focus-within > .dropdown-menu,
+.dropdown.open > .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+    background: var(--light-blue);
+    color: var(--blue);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account-link {
+    gap: 6px;
+}
+
+.header-actions .btn {
+    white-space: nowrap;
+}
+
+/* Keeps the button text white inside the menu */
+.main-nav .btn-primary,
+.main-nav .btn-primary:hover {
+    color: var(--white);
+}
+
+/* Menu button: hidden on big screens */
+.menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: var(--light-blue);
+    color: var(--navy);
+    cursor: pointer;
+}
+
+.menu-toggle .material-symbols-outlined {
+    display: inline;
+    height: auto;
+    margin: 0;
+    background: none;
+    font-size: 26px;
+}
+
+/* ---------- Header on tablets and phones ---------- */
+@media (max-width: 1100px) {
+    .header-bar {
+        flex-wrap: wrap;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .main-nav {
+        display: none;
+        width: 100%;
+        flex: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 8px 0 12px;
+        border-top: 1px solid var(--light-blue);
+    }
+
+    .main-nav.open {
+        display: flex;
+    }
+
+    .nav-list {
+        flex-direction: column;
+        align-items: stretch;
+        margin: 0;
+    }
+
+    .main-nav a {
+        border-top: none;
+    }
+
+    .nav-list .nav-link {
+        width: 100%;
+        justify-content: space-between;
+        padding: 10px 8px;
+    }
+
+    /* On small screens dropdowns open by tapping, not hovering */
+    .dropdown:hover > .dropdown-menu,
+    .dropdown:focus-within > .dropdown-menu {
+        display: none;
+    }
+
+    .dropdown.open > .dropdown-menu {
+        display: block;
+        position: static;
+        box-shadow: none;
+        border-top: none;
+        padding: 0 0 8px 12px;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .main-nav .header-actions .btn {
+        display: block;
+    }
+
+    .header-actions .account-link {
+        justify-content: flex-start;
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .site-header {
+        padding: 10px 0;
+    }
+
+    .header-bar {
+        padding: 8px 14px;
+    }
+
+    .logo-img {
+        height: 40px;
+    }
+}

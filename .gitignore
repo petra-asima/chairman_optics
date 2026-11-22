@@ -1,0 +1,14 @@
+# Secrets - never commit
+core/db_cred.php
+core/paystack_keys.php
+core/sms_keys.php
+
+# Logs
+error/*.log
+
+# Private patient files
+uploads/prescriptions/*
+uploads/exam_attachments/*
+!uploads/prescriptions/.gitkeep
+!uploads/exam_attachments/.gitkeep
+!uploads/.htaccess
