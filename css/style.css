@@ -3387,3 +3387,63 @@ select.is-invalid {
     font-size: 20px;
     color: var(--blue);
 }
+
+
+/* =====================================================================
+   PAYMENTS AND IN-STORE SALES
+   ===================================================================== */
+
+.stat-value-small {
+    font-size: 1.4rem;
+}
+
+.admin-filters label {
+    margin: 0;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.admin-filters input[type="date"] {
+    width: auto;
+    padding: 8px 10px;
+    font-size: 0.95rem;
+}
+
+.sale-who-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sale-who-row .form-group {
+    margin-bottom: 0;
+    min-width: 260px;
+}
+
+.sale-patient {
+    margin: 12px 0 0;
+}
+
+.sale-lines select {
+    min-width: 140px;
+}
+
+.sale-lines td:first-child select {
+    min-width: 240px;
+}
+
+.sale-lines .qty-input {
+    width: 70px;
+    padding: 8px;
+}
+
+/* Quantity boxes on the sale form keep a fixed width (this beats the
+   general "admin number inputs are full width" rule) */
+.admin-body .sale-lines .qty-input {
+    width: 72px;
+    min-width: 72px;
+    padding: 8px;
+    font-size: 0.95rem;
+    text-align: center;
+}

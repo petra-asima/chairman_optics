@@ -174,6 +174,13 @@ require __DIR__ . '/../layout/admin_header.php';
                     <?php endif; ?>
                 </dd>
             </dl>
+            <?php if ($balance > 0 && $order['order_status'] !== 'Cancelled' && staff_can(['Receptionist', 'Accountant'])): ?>
+                <p class="patient-actions">
+                    <a href="<?= url('views/admin/record_payment.php?order_id=' . (int) $order['order_id']) ?>" class="btn btn-primary btn-small">
+                        <span class="material-symbols-outlined" aria-hidden="true">payments</span> Record Payment
+                    </a>
+                </p>
+            <?php endif; ?>
         </section>
 
         <!-- ---------- Move the order along ---------- -->

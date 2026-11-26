@@ -127,6 +127,116 @@ class OrderClass extends Database
     }
 
     /**
+     * Save a sale made at the counter, all in ONE transaction: the order,
+     * its items (with lenses and prescription if chosen), the first
+     * status-history line, stock taken off, and the first payment if any.
+     *
+     * Unlike an online order (which is already paid for), an in-store sale
+     * is refused if stock is short, because the customer is still at the
+     * counter and staff can offer something else.
+     *
+     * @param array      $order    patient_id, customer_id, order_total, order_status, notes, created_by
+     * @param array      $items    product_id, product_title, qty, unit_price, is_service,
+     *                             lens_type_id, lens_coating_id, lens_price, prescription_id
+     * @param array|null $payment  amount, method, reference (null when nothing is paid now)
+     * @return array  ['order_id', 'invoice_no'] or ['error' => 'stock'|'reference'|'database', 'product' => title]
+     */
+    public function createInStoreOrder(array $order, array $items, ?array $payment): array
+    {
+        $this->conn->begin_transaction();
+        try {
+            $tempInvoice = 'TMP-' . bin2hex(random_bytes(8));
+            $stmt = $this->conn->prepare(
+                "INSERT INTO co_orders
+                    (customer_id, patient_id, invoice_no, order_status, order_source, order_total,
+                     delivery_method, created_by, notes)
+                 VALUES (?, ?, ?, ?, 'In-store', ?, 'Pickup', ?, ?)"
+            );
+            $stmt->bind_param('iissdis', $order['customer_id'], $order['patient_id'], $tempInvoice,
+                              $order['order_status'], $order['order_total'], $order['created_by'], $order['notes']);
+            $stmt->execute();
+            $orderId = $stmt->insert_id;
+            $stmt->close();
+
+            $invoiceNo = sprintf('INV-%s-%05d', date('Y'), $orderId);
+            $stmt = $this->conn->prepare('UPDATE co_orders SET invoice_no = ? WHERE order_id = ?');
+            $stmt->bind_param('si', $invoiceNo, $orderId);
+            $stmt->execute();
+            $stmt->close();
+
+            $addItem = $this->conn->prepare(
+                'INSERT INTO co_orderdetails
+                    (order_id, product_id, qty, unit_price, lens_type_id, lens_coating_id, lens_price, prescription_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $takeStock = $this->conn->prepare(
+                'UPDATE co_products SET product_stock = product_stock - ?
+                 WHERE product_id = ? AND product_stock >= ?'
+            );
+            $addMovement = $this->conn->prepare(
+                "INSERT INTO co_stock_movements (product_id, change_qty, reason, order_id, staff_id, note)
+                 VALUES (?, ?, 'Sale', ?, ?, 'In-store sale')"
+            );
+
+            foreach ($items as $item) {
+                $addItem->bind_param('iiidiidi', $orderId, $item['product_id'], $item['qty'], $item['unit_price'],
+                                     $item['lens_type_id'], $item['lens_coating_id'], $item['lens_price'],
+                                     $item['prescription_id']);
+                $addItem->execute();
+
+                if ((int) $item['is_service'] === 1) {
+                    continue; // services (e.g. an exam fee) have no stock
+                }
+
+                $takeStock->bind_param('iii', $item['qty'], $item['product_id'], $item['qty']);
+                $takeStock->execute();
+                if ($takeStock->affected_rows !== 1) {
+                    // Not enough on the shelf: undo the whole sale
+                    $this->conn->rollback();
+                    return ['error' => 'stock', 'product' => $item['product_title']];
+                }
+                $change = -$item['qty'];
+                $addMovement->bind_param('iiii', $item['product_id'], $change, $orderId, $order['created_by']);
+                $addMovement->execute();
+            }
+            $addItem->close();
+            $takeStock->close();
+            $addMovement->close();
+
+            $note = $order['order_status'] === 'Delivered' ? 'Sold and handed over in the shop' : 'Ordered in the shop';
+            $stmt = $this->conn->prepare(
+                'INSERT INTO co_order_status_history (order_id, status, changed_by, note) VALUES (?, ?, ?, ?)'
+            );
+            $stmt->bind_param('isis', $orderId, $order['order_status'], $order['created_by'], $note);
+            $stmt->execute();
+            $stmt->close();
+
+            if ($payment !== null) {
+                $stmt = $this->conn->prepare(
+                    "INSERT INTO co_payment
+                        (order_id, customer_id, amt, currency, payment_method, pay_reference, pay_status, received_by)
+                     VALUES (?, ?, ?, 'GHS', ?, ?, 'Success', ?)"
+                );
+                $stmt->bind_param('iidssi', $orderId, $order['customer_id'], $payment['amount'],
+                                  $payment['method'], $payment['reference'], $order['created_by']);
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            $this->conn->commit();
+            return ['order_id' => $orderId, 'invoice_no' => $invoiceNo];
+        } catch (mysqli_sql_exception $ex) {
+            $this->conn->rollback();
+            // 1062 = duplicate value in a UNIQUE column (here: the payment reference)
+            if ($ex->getCode() === 1062) {
+                return ['error' => 'reference'];
+            }
+            log_error('createInStoreOrder failed: ' . $ex->getMessage());
+            return ['error' => 'database'];
+        }
+    }
+
+    /**
      * Has this Paystack reference already been saved? If so, its order_id.
      * This stops the same payment creating two orders (for example if the
      * customer refreshes the page after paying).

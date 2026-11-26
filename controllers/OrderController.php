@@ -229,6 +229,210 @@ class OrderController
     }
 
     // =================================================================
+    // STAFF: in-store sales (at the counter)
+    // =================================================================
+
+    // Lines on the sale form, and the most of one product per line
+    public const SALE_LINES   = 5;
+    public const SALE_MAX_QTY = 20;
+
+    // How customers pay in the shop (must match the ENUM in co_payment)
+    public const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Card', 'Bank Transfer'];
+
+    /**
+     * Everything the sale form needs: products, lens options, and the
+     * patient and their prescriptions if a folder number was given.
+     */
+    public function getSaleFormData(string $folderNo): array
+    {
+        require_once __DIR__ . '/../classes/ProductClass.php';
+        require_once __DIR__ . '/../classes/PatientClass.php';
+        require_once __DIR__ . '/../classes/PrescriptionClass.php';
+
+        $products = (new ProductClass())->getSaleProducts();
+        $lenses   = array_filter((new ProductClass())->getAllLensOptions(), fn($l) => (int) $l['is_active'] === 1);
+
+        $patient = false;
+        $prescriptions = [];
+        if ($folderNo !== '') {
+            $patient = (new PatientClass())->getPatientByFolder(strtoupper($folderNo));
+            if ($patient) {
+                $prescriptions = (new PrescriptionClass())->getPatientPrescriptions((int) $patient['patient_id']);
+            }
+        }
+
+        return [
+            'products'      => $products,
+            'lens_types'    => array_values(array_filter($lenses, fn($l) => $l['option_group'] === 'Lens type')),
+            'coatings'      => array_values(array_filter($lenses, fn($l) => $l['option_group'] === 'Coating')),
+            'patient'       => $patient,
+            'prescriptions' => $prescriptions,
+        ];
+    }
+
+    /**
+     * Make a sale at the counter.
+     * @param array $data  folder_no, lines (product_id, qty, lens_type_id, lens_coating_id,
+     *                     prescription_id), amount_paid, method, reference, notes
+     * @return array ['success' => true, 'order_id' => N, 'message' => ...] or ['success' => false, 'errors' => [...]]
+     */
+    public function createInStoreSale(array $data, int $staffId): array
+    {
+        $form   = $this->getSaleFormData($data['folder_no']);
+        $errors = [];
+
+        if ($data['folder_no'] !== '' && !$form['patient']) {
+            $errors['folder_no'] = 'No patient has that folder number. Leave it empty for a walk-in sale.';
+        }
+
+        // Look-up tables by id, so each line can be checked against the real records
+        $products      = array_column($form['products'], null, 'product_id');
+        $lensTypes     = array_column($form['lens_types'], null, 'lens_id');
+        $coatings      = array_column($form['coatings'], null, 'lens_id');
+        $prescriptions = array_column($form['prescriptions'], null, 'prescription_id');
+
+        $items     = [];
+        $total     = 0.0;
+        $hasLenses = false;
+
+        foreach ($data['lines'] as $n => $line) {
+            $productId = (int) $line['product_id'];
+            if ($productId === 0) {
+                continue; // an empty line
+            }
+            $label = 'Line ' . ($n + 1);
+
+            if (!isset($products[$productId])) {
+                $errors['line' . $n] = $label . ': choose a product from the list.';
+                continue;
+            }
+            $product = $products[$productId];
+
+            $qty = filter_var($line['qty'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => self::SALE_MAX_QTY]]);
+            if ($qty === false) {
+                $errors['line' . $n] = $label . ': quantity must be 1 to ' . self::SALE_MAX_QTY . '.';
+                continue;
+            }
+            if ((int) $product['is_service'] === 0 && $qty > (int) $product['product_stock']) {
+                $errors['line' . $n] = $label . ': only ' . (int) $product['product_stock'] . ' of ' . $product['product_title'] . ' in stock.';
+                continue;
+            }
+
+            // Lenses: only for frames that can take them, only with a prescription
+            $lensTypeId = (int) $line['lens_type_id'];
+            $coatingId  = (int) $line['lens_coating_id'];
+            $rxId       = (int) $line['prescription_id'];
+            $lensPrice  = 0.0;
+
+            if ($lensTypeId > 0 || $coatingId > 0 || $rxId > 0) {
+                if ((int) $product['needs_lenses'] !== 1) {
+                    $errors['line' . $n] = $label . ': ' . $product['product_title'] . ' cannot take prescription lenses.';
+                    continue;
+                }
+                if (!isset($lensTypes[$lensTypeId])) {
+                    $errors['line' . $n] = $label . ': choose a lens type.';
+                    continue;
+                }
+                if ($coatingId > 0 && !isset($coatings[$coatingId])) {
+                    $errors['line' . $n] = $label . ': choose a coating from the list.';
+                    continue;
+                }
+                if (!isset($prescriptions[$rxId])) {
+                    $errors['line' . $n] = $label . ': choose one of this patient\'s prescriptions (enter their folder number first).';
+                    continue;
+                }
+                $lensPrice = (float) $lensTypes[$lensTypeId]['lens_price']
+                           + ($coatingId > 0 ? (float) $coatings[$coatingId]['lens_price'] : 0.0);
+                $hasLenses = true;
+            }
+
+            $items[] = [
+                'product_id'      => $productId,
+                'product_title'   => $product['product_title'],
+                'qty'             => $qty,
+                'unit_price'      => (float) $product['product_price'],
+                'is_service'      => (int) $product['is_service'],
+                'lens_type_id'    => $lensTypeId > 0 ? $lensTypeId : null,
+                'lens_coating_id' => $coatingId > 0 ? $coatingId : null,
+                'lens_price'      => $lensPrice,
+                'prescription_id' => $rxId > 0 ? $rxId : null,
+            ];
+            $total += ((float) $product['product_price'] + $lensPrice) * $qty;
+        }
+
+        if (empty($items) && empty($errors)) {
+            $errors['form'] = 'Add at least one product to the sale.';
+        }
+
+        // Payment now: all, part or nothing; never more than the total
+        $total = round($total, 2);
+        $paid  = 0.0;
+        if ($data['amount_paid'] !== '') {
+            if (!preg_match(self::PRICE_PATTERN_SALE, $data['amount_paid'])) {
+                $errors['amount_paid'] = 'Enter the amount paid, for example 150 or 150.50.';
+            } else {
+                $paid = round((float) $data['amount_paid'], 2);
+                if ($paid > $total) {
+                    $errors['amount_paid'] = 'The amount paid cannot be more than the total (' . money($total) . ').';
+                }
+            }
+        }
+        if ($paid > 0 && !in_array($data['method'], self::PAYMENT_METHODS, true)) {
+            $errors['method'] = 'Choose how the customer paid.';
+        }
+        if (strlen($data['reference']) > 100 || strlen($data['notes']) > 255) {
+            $errors['reference'] = 'The reference can be up to 100 characters and notes up to 255.';
+        }
+
+        if (!empty($errors)) {
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $patient = $form['patient'];
+        $saved = $this->order->createInStoreOrder(
+            [
+                'patient_id'   => $patient ? (int) $patient['patient_id'] : null,
+                'customer_id'  => $patient && $patient['customer_id'] !== null ? (int) $patient['customer_id'] : null,
+                'order_total'  => $total,
+                // Glasses go to the lab; everything else is handed over now
+                'order_status' => $hasLenses ? 'Pending' : 'Delivered',
+                'notes'        => $data['notes'] !== '' ? $data['notes'] : null,
+                'created_by'   => $staffId,
+            ],
+            $items,
+            $paid > 0 ? [
+                'amount'    => $paid,
+                'method'    => $data['method'],
+                // A reference only makes sense for non-cash payments
+                'reference' => $data['method'] !== 'Cash' && $data['reference'] !== '' ? $data['reference'] : null,
+            ] : null
+        );
+
+        if (isset($saved['error'])) {
+            $messages = [
+                'stock'     => 'Someone has just sold the last of ' . ($saved['product'] ?? 'an item') . '. Please check the stock.',
+                'reference' => 'That payment reference has already been recorded. Check it is not a duplicate payment.',
+                'database'  => "We couldn't save the sale. Please try again.",
+            ];
+            return ['success' => false, 'errors' => ['form' => $messages[$saved['error']]]];
+        }
+
+        require_once __DIR__ . '/../classes/AuditClass.php';
+        (new AuditClass())->log($staffId, 'CREATE',
+            'In-store sale ' . $saved['invoice_no'] . ' for ' . money($total) . ', paid ' . money($paid),
+            'co_orders', $saved['order_id']);
+
+        $balance = $total - $paid;
+        return ['success' => true, 'order_id' => $saved['order_id'],
+                'message' => 'Sale ' . $saved['invoice_no'] . ' saved: ' . money($total) . ' total'
+                           . ($balance > 0 ? ', ' . money($balance) . ' still owed.' : ', fully paid.')
+                           . ($hasLenses ? ' The glasses are now in the lab queue.' : '')];
+    }
+
+    // An amount of money such as 150 or 150.50
+    private const PRICE_PATTERN_SALE = '/^\d{1,8}(\.\d{1,2})?$/';
+
+    // =================================================================
     // STAFF: Orders and Lab
     // =================================================================
 

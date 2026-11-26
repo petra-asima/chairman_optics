@@ -19,6 +19,9 @@
 --   Re-importing deletes all co_ test data.
 -- =====================================================================
 
+-- Every table is created as utf8mb4, so it can store the cedi sign (₵)
+-- and Ghanaian letters such as Ɔ and Ɛ. Without this, a table takes the
+-- database's default, which on some servers is the old latin1.
 SET NAMES utf8mb4;
 
 -- Remove old co_ tables so the file can be imported again.
@@ -51,7 +54,7 @@ CREATE TABLE co_customer (
     customer_contact VARCHAR(15)  NOT NULL,           -- saved as +233...
     customer_pass    VARCHAR(255) NOT NULL,           -- bcrypt hash
     date_created     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_roles: the five staff roles agreed with the owner.
@@ -59,7 +62,7 @@ CREATE TABLE co_customer (
 CREATE TABLE co_roles (
     role_id   INT AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(30) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_staff: back office users. Each staff member has exactly one role.
@@ -78,7 +81,7 @@ CREATE TABLE co_staff (
     last_login    DATETIME     NULL,
     date_created  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES co_roles(role_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_patients: clinic records with a folder number.
@@ -104,7 +107,7 @@ CREATE TABLE co_patients (
     FOREIGN KEY (registered_by) REFERENCES co_staff(staff_id)       ON DELETE SET NULL,
     INDEX idx_patient_name (patient_lname, patient_fname),
     INDEX idx_patient_contact (patient_contact)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- =====================================================================
@@ -118,7 +121,7 @@ CREATE TABLE co_patients (
 CREATE TABLE co_categories (
     cat_id   INT AUTO_INCREMENT PRIMARY KEY,
     cat_name VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_brands: frame and lens brands. Same columns as the shoppn lab.
@@ -126,7 +129,7 @@ CREATE TABLE co_categories (
 CREATE TABLE co_brands (
     brand_id   INT AUTO_INCREMENT PRIMARY KEY,
     brand_name VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_products: everything sold, online or in the shop.
@@ -157,7 +160,7 @@ CREATE TABLE co_products (
     FOREIGN KEY (product_brand) REFERENCES co_brands(brand_id) ON DELETE SET NULL,
     INDEX idx_product_price (product_price),
     INDEX idx_product_colour (product_colour)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_lens_options: lenses chosen when ordering prescription glasses.
@@ -171,7 +174,7 @@ CREATE TABLE co_lens_options (
     lens_price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     lens_desc    VARCHAR(255)  NULL,
     is_active    TINYINT(1)    NOT NULL DEFAULT 1
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_stock_movements: every change to stock, so staff can see why a
@@ -190,7 +193,7 @@ CREATE TABLE co_stock_movements (
     FOREIGN KEY (product_id) REFERENCES co_products(product_id),
     FOREIGN KEY (staff_id)   REFERENCES co_staff(staff_id) ON DELETE SET NULL
     -- order_id foreign key is added after the orders table is created
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- =====================================================================
@@ -219,7 +222,7 @@ CREATE TABLE co_appointments (
     FOREIGN KEY (patient_id)     REFERENCES co_patients(patient_id)  ON DELETE SET NULL,
     FOREIGN KEY (optometrist_id) REFERENCES co_staff(staff_id)       ON DELETE SET NULL,
     INDEX idx_appointment_day (appointment_date, appointment_time)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_eye_exams: one row per clinical eye exam.
@@ -245,7 +248,7 @@ CREATE TABLE co_eye_exams (
     FOREIGN KEY (patient_id)     REFERENCES co_patients(patient_id),
     FOREIGN KEY (appointment_id) REFERENCES co_appointments(appointment_id) ON DELETE SET NULL,
     FOREIGN KEY (optometrist_id) REFERENCES co_staff(staff_id)              ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_exam_attachments: files added to an exam (scans, referral letters).
@@ -260,7 +263,7 @@ CREATE TABLE co_exam_attachments (
     uploaded_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (exam_id)     REFERENCES co_eye_exams(exam_id) ON DELETE CASCADE,
     FOREIGN KEY (uploaded_by) REFERENCES co_staff(staff_id)    ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_prescriptions: glasses prescriptions from two sources.
@@ -291,7 +294,7 @@ CREATE TABLE co_prescriptions (
     FOREIGN KEY (patient_id)  REFERENCES co_patients(patient_id)  ON DELETE SET NULL,
     FOREIGN KEY (customer_id) REFERENCES co_customer(customer_id) ON DELETE SET NULL,
     FOREIGN KEY (exam_id)     REFERENCES co_eye_exams(exam_id)    ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- =====================================================================
@@ -320,7 +323,7 @@ CREATE TABLE co_cart (
     FOREIGN KEY (lens_type_id)    REFERENCES co_lens_options(lens_id)          ON DELETE SET NULL,
     FOREIGN KEY (lens_coating_id) REFERENCES co_lens_options(lens_id)          ON DELETE SET NULL,
     FOREIGN KEY (prescription_id) REFERENCES co_prescriptions(prescription_id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_orders: one row per sale, online or in the shop.
@@ -348,7 +351,7 @@ CREATE TABLE co_orders (
     FOREIGN KEY (created_by)  REFERENCES co_staff(staff_id)       ON DELETE SET NULL,
     INDEX idx_order_status (order_status),
     INDEX idx_order_date (order_date)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Now that orders exists, link stock movements to orders.
 ALTER TABLE co_stock_movements
@@ -373,7 +376,7 @@ CREATE TABLE co_orderdetails (
     FOREIGN KEY (lens_type_id)    REFERENCES co_lens_options(lens_id)          ON DELETE SET NULL,
     FOREIGN KEY (lens_coating_id) REFERENCES co_lens_options(lens_id)          ON DELETE SET NULL,
     FOREIGN KEY (prescription_id) REFERENCES co_prescriptions(prescription_id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_order_status_history: every status change, with who made it.
@@ -388,7 +391,7 @@ CREATE TABLE co_order_status_history (
     changed_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id)   REFERENCES co_orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (changed_by) REFERENCES co_staff(staff_id)  ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- =====================================================================
@@ -417,7 +420,7 @@ CREATE TABLE co_payment (
     FOREIGN KEY (customer_id) REFERENCES co_customer(customer_id) ON DELETE SET NULL,
     FOREIGN KEY (received_by) REFERENCES co_staff(staff_id)       ON DELETE SET NULL,
     INDEX idx_payment_date (payment_date)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_expenses: money spent by the business, used for the P&L report.
@@ -435,7 +438,7 @@ CREATE TABLE co_expenses (
     created_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (recorded_by) REFERENCES co_staff(staff_id) ON DELETE SET NULL,
     INDEX idx_expense_date (expense_date)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- Debtors and low-stock alerts
@@ -489,7 +492,7 @@ CREATE TABLE co_notifications (
     FOREIGN KEY (patient_id)     REFERENCES co_patients(patient_id)          ON DELETE SET NULL,
     FOREIGN KEY (order_id)       REFERENCES co_orders(order_id)              ON DELETE SET NULL,
     FOREIGN KEY (appointment_id) REFERENCES co_appointments(appointment_id)  ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- co_audit_log: who did what and when in the back office.
@@ -506,7 +509,7 @@ CREATE TABLE co_audit_log (
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (staff_id) REFERENCES co_staff(staff_id) ON DELETE SET NULL,
     INDEX idx_audit_date (created_at)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- =====================================================================

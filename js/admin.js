@@ -50,6 +50,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ---------- In-store sale: show line totals and the total while typing ----------
+    // This is only a preview for the customer at the counter. The server
+    // works out the real total from the database when the sale is saved.
+    var saleForm = document.getElementById('sale-form');
+
+    if (saleForm) {
+        var cedis = function (amount) {
+            return 'GH₵ ' + amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        var updateSaleTotal = function () {
+            var total = 0;
+            saleForm.querySelectorAll('.js-sale-line').forEach(function (row) {
+                var product = row.querySelector('.js-product');
+                var chosen  = product.options[product.selectedIndex];
+                var qty     = parseInt(row.querySelector('.js-qty-sale').value, 10) || 0;
+                var cell    = row.querySelector('.js-line-total');
+
+                if (product.value === '0') {
+                    cell.textContent = '-';
+                    return;
+                }
+                var each = parseFloat(chosen.dataset.price) || 0;
+                // Lens prices only count for frames that take lenses
+                if (chosen.dataset.lenses === '1') {
+                    row.querySelectorAll('.js-lens').forEach(function (lens) {
+                        each += parseFloat(lens.options[lens.selectedIndex].dataset.price) || 0;
+                    });
+                }
+                cell.textContent = cedis(each * qty);
+                total += each * qty;
+            });
+            saleForm.querySelector('.js-sale-total').textContent = cedis(total);
+        };
+
+        saleForm.addEventListener('change', updateSaleTotal);
+        saleForm.addEventListener('input', updateSaleTotal);
+        updateSaleTotal();
+    }
+
     // ---------- Stock form: "add or remove" only for adjustments ----------
     var reasonSelect = document.getElementById('reason');
     var directionBox = document.querySelector('.js-direction');

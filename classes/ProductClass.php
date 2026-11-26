@@ -716,6 +716,24 @@ class ProductClass extends Database
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
+    /**
+     * Everything staff can sell at the counter: active products AND
+     * services (an eye exam fee is sold in the shop, though not online).
+     * @return array
+     */
+    public function getSaleProducts(): array
+    {
+        $result = $this->conn->query(
+            'SELECT p.product_id, p.product_title, p.product_price, p.product_stock,
+                    p.is_service, p.needs_lenses, c.cat_name
+             FROM co_products p
+             JOIN co_categories c ON c.cat_id = p.product_cat
+             WHERE p.is_active = 1
+             ORDER BY c.cat_name, p.product_title'
+        );
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
     /** Every colour used by a shop product, for the colour filter. */
     public function getShopColours(): array
     {
