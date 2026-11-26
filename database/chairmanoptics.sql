@@ -46,7 +46,7 @@ CREATE TABLE co_customer (
     customer_id      INT AUTO_INCREMENT PRIMARY KEY,
     customer_fname   VARCHAR(50)  NOT NULL,
     customer_lname   VARCHAR(50)  NOT NULL,
-    customer_gender  VARCHAR(10)  NOT NULL,
+    customer_gender  VARCHAR(20)  NOT NULL,           -- fits "Prefer not to say"
     customer_email   VARCHAR(100) NOT NULL UNIQUE,
     customer_contact VARCHAR(15)  NOT NULL,           -- saved as +233...
     customer_pass    VARCHAR(255) NOT NULL,           -- bcrypt hash
@@ -92,7 +92,7 @@ CREATE TABLE co_patients (
     customer_id     INT          NULL,
     patient_fname   VARCHAR(50)  NOT NULL,
     patient_lname   VARCHAR(50)  NOT NULL,
-    patient_gender  VARCHAR(10)  NOT NULL,
+    patient_gender  VARCHAR(20)  NOT NULL,            -- fits "Prefer not to say"
     date_of_birth   DATE         NULL,
     patient_contact VARCHAR(15)  NOT NULL,
     patient_email   VARCHAR(100) NULL,

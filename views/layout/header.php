@@ -2,6 +2,16 @@
 // Shared top of every customer page: <head>, site header and menu.
 // Set $pageTitle before including this file.
 $pageTitle = $pageTitle ?? SITE_NAME;
+
+// The Shop menu lists the categories that have products in the shop,
+// so the links always match what staff have added.
+require_once __DIR__ . '/../../controllers/ProductController.php';
+$menuCategories = (new ProductController())->getShopCategories();
+
+// Number on the cart icon. cart_owner() is only read here, never
+// created, because the page has already started sending HTML.
+require_once __DIR__ . '/../../controllers/CartController.php';
+$cartCount = (new CartController())->countItems(cart_owner());
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -23,6 +33,16 @@ $pageTitle = $pageTitle ?? SITE_NAME;
         <div class="header-bar">
             <a href="<?= url('index.php') ?>" class="logo">
                 <img src="<?= url('images/logo.png') ?>" alt="Chairman Optics and Lens Centre – home" class="logo-img">
+            </a>
+
+            <!-- Cart icon for phones and tablets, where the menu is folded away -->
+            <a href="<?= url('views/cart.php') ?>" class="cart-link cart-link-mobile">
+                <span class="material-symbols-outlined" aria-hidden="true">shopping_cart</span>
+                <span class="visually-hidden">My cart</span>
+                <?php if ($cartCount > 0): ?>
+                    <span class="cart-badge"><?= $cartCount ?></span>
+                    <span class="visually-hidden">items</span>
+                <?php endif; ?>
             </a>
 
             <button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="main-nav">
@@ -75,9 +95,9 @@ $pageTitle = $pageTitle ?? SITE_NAME;
                         </button>
                         <ul class="dropdown-menu">
                             <li><a href="<?= url('views/all_products.php') ?>">All Products</a></li>
-                            <li><a href="<?= url('views/all_products.php?type=frames') ?>">Frames</a></li>
-                            <li><a href="<?= url('views/all_products.php?type=lenses') ?>">Lenses</a></li>
-                            <li><a href="<?= url('views/all_products.php?type=accessories') ?>">Accessories</a></li>
+                            <?php foreach ($menuCategories as $menuCat): ?>
+                                <li><a href="<?= url('views/all_products.php?cat=' . (int) $menuCat['cat_id']) ?>"><?= e($menuCat['cat_name']) ?></a></li>
+                            <?php endforeach; ?>
                             <li><a href="<?= url('views/cart.php') ?>">My Cart</a></li>
                         </ul>
                     </li>
@@ -87,6 +107,17 @@ $pageTitle = $pageTitle ?? SITE_NAME;
                 </ul>
 
                 <div class="header-actions">
+                    <a href="<?= url('views/cart.php') ?>" class="nav-link cart-link">
+                        <span class="material-symbols-outlined" aria-hidden="true">shopping_cart</span>
+                        <span class="visually-hidden">My cart,</span>
+                        <?php if ($cartCount > 0): ?>
+                            <span class="cart-badge"><?= $cartCount ?></span>
+                            <span class="visually-hidden">item<?= $cartCount === 1 ? '' : 's' ?></span>
+                        <?php else: ?>
+                            <span class="visually-hidden">empty</span>
+                        <?php endif; ?>
+                    </a>
+
                     <?php if (is_logged_in()): ?>
                         <div class="dropdown">
                             <button type="button" class="nav-link dropdown-toggle account-link" aria-expanded="false">
